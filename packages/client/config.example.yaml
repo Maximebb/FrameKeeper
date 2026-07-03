@@ -1,0 +1,24 @@
+# FrameKeeper client configuration.
+# Copy to config.yaml next to this file (or point FK_CLIENT_CONFIG at it).
+
+# Base URL of the FrameKeeper server.
+serverUrl: "http://192.168.1.10:8080"
+
+# API token created in the server frontend (Settings -> API Tokens).
+# Shown only once at creation time.
+apiToken: "fk_xxxxxxxxxxxxxxxx_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+# Name identifying this machine in the frontend.
+clientName: "living-room-pc"
+
+# How often to scan for newly inserted removable drives (milliseconds).
+pollIntervalMs: 3000
+
+# Delete files from the SD card after the server confirms a verified backup.
+# Files are NEVER deleted unless the server has verified the on-disk digest.
+deleteAfterBackup: false
+
+# File name patterns to skip (case-insensitive, * wildcard).
+ignorePatterns:
+  - "*.THM"
+  - "*.LRV"

@@ -1,0 +1,158 @@
+:root {
+  --bg: #0f1115;
+  --panel: #181c24;
+  --panel-2: #1f2530;
+  --text: #e6e9ef;
+  --muted: #8b93a3;
+  --accent: #4f9cf9;
+  --accent-2: #2f6fd0;
+  --danger: #e5534b;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --radius: 10px;
+  font-size: 15px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.4rem;
+  background: var(--panel);
+  border-bottom: 1px solid #2a3140;
+}
+
+.topbar .brand { font-weight: 700; letter-spacing: 0.04em; }
+.topbar .brand span { color: var(--accent); }
+
+.topbar nav { display: flex; gap: 0.4rem; }
+
+.topbar nav button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.topbar nav button.active { background: var(--panel-2); color: var(--text); }
+.topbar nav button:hover { color: var(--text); }
+
+main { flex: 1; max-width: 960px; width: 100%; margin: 0 auto; padding: 1.4rem; }
+
+.card {
+  background: var(--panel);
+  border: 1px solid #2a3140;
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.card h2 { margin: 0 0 0.9rem; font-size: 1.05rem; }
+.card h3 { margin: 1.1rem 0 0.5rem; font-size: 0.92rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.muted { color: var(--muted); }
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.danger { color: var(--danger); }
+
+button.primary, button.ghost, button.danger-btn {
+  border-radius: var(--radius);
+  padding: 0.5rem 1.1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+button.primary { background: var(--accent-2); color: white; }
+button.primary:hover { background: var(--accent); }
+button.primary:disabled { opacity: 0.5; cursor: default; }
+button.ghost { background: transparent; border-color: #2a3140; color: var(--text); }
+button.ghost:hover { border-color: var(--muted); }
+button.danger-btn { background: transparent; border-color: var(--danger); color: var(--danger); }
+button.danger-btn:hover { background: var(--danger); color: white; }
+
+input[type="text"], input[type="password"], input[type="search"] {
+  background: var(--panel-2);
+  border: 1px solid #2a3140;
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.95rem;
+  width: 100%;
+}
+input:focus { outline: 2px solid var(--accent-2); border-color: transparent; }
+
+label.field { display: block; margin-bottom: 0.9rem; }
+label.field .label { display: block; margin-bottom: 0.3rem; color: var(--muted); font-size: 0.88rem; }
+
+label.toggle { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; cursor: pointer; }
+
+.login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-box { width: 340px; }
+.login-box h1 { text-align: center; font-size: 1.3rem; margin-bottom: 1.4rem; }
+.login-box h1 span { color: var(--accent); }
+
+.progress-track { background: var(--panel-2); border-radius: 999px; height: 14px; overflow: hidden; margin: 0.6rem 0; }
+.progress-fill { background: linear-gradient(90deg, var(--accent-2), var(--accent)); height: 100%; transition: width 0.4s ease; }
+
+.prompt-banner {
+  border: 1px solid var(--warn);
+  background: rgba(210, 153, 34, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.prompt-banner .actions { display: flex; gap: 0.6rem; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #232a37; }
+th { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+td.mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.82rem; color: var(--muted); }
+
+.row { display: flex; gap: 0.8rem; align-items: center; }
+.row.spread { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.token-reveal {
+  background: var(--panel-2);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  margin: 0.8rem 0;
+}
+
+.error-msg { color: var(--danger); margin: 0.6rem 0; font-size: 0.9rem; }
+.success-msg { color: var(--ok); margin: 0.6rem 0; font-size: 0.9rem; }
+
+.empty { text-align: center; color: var(--muted); padding: 2rem 0; }
+
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid #2a3140;
+  color: var(--muted);
+}
+.badge.running { border-color: var(--accent); color: var(--accent); }
+.badge.done { border-color: var(--ok); color: var(--ok); }
+.badge.failed, .badge.dismissed { border-color: var(--danger); color: var(--danger); }
+.badge.pending { border-color: var(--warn); color: var(--warn); }

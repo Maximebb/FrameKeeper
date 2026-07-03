@@ -1,0 +1,19 @@
+services:
+  framekeeper:
+    build: .
+    container_name: framekeeper
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      FK_DATA_DIR: /data
+      FK_BACKUP_DIR: /backups
+    volumes:
+      # SQLite database (config, digests, sessions, users, tokens)
+      - framekeeper-data:/data
+      # Where backed-up photos/videos land; point this at your NAS storage
+      - ./backups:/backups
+
+volumes:
+  framekeeper-data:

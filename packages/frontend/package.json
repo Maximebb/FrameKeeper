@@ -1,0 +1,19 @@
+{
+  "name": "@framekeeper/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "preact": "^10.24.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.9.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0"
+  }
+}

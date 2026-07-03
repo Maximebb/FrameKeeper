@@ -1,0 +1,25 @@
+{
+  "name": "@framekeeper/client",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "service:install": "node dist/service/install.js",
+    "service:uninstall": "node dist/service/uninstall.js"
+  },
+  "dependencies": {
+    "@framekeeper/shared": "*",
+    "drivelist": "^12.0.2",
+    "yaml": "^2.5.0"
+  },
+  "optionalDependencies": {
+    "node-windows": "^1.0.0-beta.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0"
+  }
+}
