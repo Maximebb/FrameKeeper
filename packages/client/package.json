@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@framekeeper/shared": "*",
-    "drivelist": "^12.0.2",
     "yaml": "^2.5.0"
   },
   "optionalDependencies": {
