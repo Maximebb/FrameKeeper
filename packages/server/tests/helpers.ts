@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
+import fastifyRateLimit from '@fastify/rate-limit';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -26,6 +27,7 @@ export async function buildTestApp(): Promise<TestApp> {
   seedAdmin(repos);
 
   const app = Fastify({ logger: false });
+  await app.register(fastifyRateLimit, { global: false });
   await app.register(fastifyCookie);
   app.addContentTypeParser('application/octet-stream', (_req, payload, done) => {
     done(null, payload);

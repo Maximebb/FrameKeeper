@@ -38,6 +38,7 @@ export interface BackupSession {
   finishedAt: string | null;
 }
 
+/** Internal file record including the server-side storage path. */
 export interface FileRecord {
   id: number;
   sha256: string;
@@ -47,6 +48,9 @@ export interface FileRecord {
   sessionId: number | null;
   backedUpAt: string;
 }
+
+/** File metadata exposed over the API (no internal storage path). */
+export type FilePublicRecord = Omit<FileRecord, 'destPath'>;
 
 export interface ServerConfig {
   /** Glob-lite patterns (e.g. "*.THM") matched against file names, case-insensitive. */

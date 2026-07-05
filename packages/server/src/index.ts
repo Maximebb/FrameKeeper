@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import fastifyCookie from '@fastify/cookie';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import fs from 'node:fs';
 import { loadEnv } from './env';
@@ -14,11 +16,32 @@ async function main(): Promise<void> {
   const env = loadEnv();
   const db = openDatabase(env.dataDir);
   const repos = new Repositories(db);
-  seedAdmin(repos);
+  seedAdmin(repos, env.adminInitialPassword);
 
   const app = Fastify({
     logger: true,
+    trustProxy: env.trustProxy,
     bodyLimit: 1024 * 1024, // JSON bodies only; uploads stream through the octet-stream parser
+  });
+
+  await app.register(fastifyHelmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  });
+
+  await app.register(fastifyRateLimit, {
+    global: false,
   });
 
   await app.register(fastifyCookie);
@@ -28,7 +51,7 @@ async function main(): Promise<void> {
     done(null, payload);
   });
 
-  registerAuth(app, repos);
+  registerAuth(app, repos, { secureCookies: env.secureCookies, adminInitialPassword: env.adminInitialPassword });
 
   const storage = new StorageEngine(env.backupDir, repos);
   const events = new EventBus();

@@ -13,25 +13,29 @@ export function registerRoutes(
   storage: StorageEngine,
   events: EventBus
 ): void {
-  // --- live status ---
+  // --- live status (browser session only) ---
 
-  app.get('/api/status', async () => {
+  app.get('/api/status', async (request, reply) => {
+    if (!requireUser(request, reply)) return;
     const active = repos.getActiveSession();
     return { session: active ?? null };
   });
 
   app.get('/api/events', (request, reply) => {
+    if (!requireUser(request, reply)) return;
     events.add(reply);
   });
 
-  // --- history ---
+  // --- history (browser session only) ---
 
-  app.get('/api/sessions', async (request) => {
+  app.get('/api/sessions', async (request, reply) => {
+    if (!requireUser(request, reply)) return;
     const { limit } = request.query as { limit?: string };
     return { sessions: repos.listSessions(Math.min(Number(limit ?? 50), 200)) };
   });
 
-  app.get('/api/files', async (request) => {
+  app.get('/api/files', async (request, reply) => {
+    if (!requireUser(request, reply)) return;
     const { search, limit, offset } = request.query as {
       search?: string;
       limit?: string;

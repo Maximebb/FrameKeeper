@@ -19,7 +19,6 @@ export interface BackedUpFile {
   sha256: string;
   size: number;
   originalName: string;
-  destPath: string;
   backedUpAt: string;
 }
 

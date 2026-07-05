@@ -245,4 +245,23 @@ describe('file history', () => {
     const res = await t.app.inject({ method: 'GET', url: '/api/files?search=IMG_', headers: { cookie } });
     expect(res.json().total).toBe(2);
   });
+
+  it('does not expose internal storage paths', async () => {
+    const content = Buffer.from('secret path test');
+    await t.app.inject({
+      method: 'POST',
+      url: '/api/files',
+      headers: {
+        ...bearer,
+        'content-type': 'application/octet-stream',
+        'x-fk-sha256': sha(content),
+        'x-fk-name': encodeURIComponent('IMG.CR3'),
+      },
+      payload: content,
+    });
+    const res = await t.app.inject({ method: 'GET', url: '/api/files', headers: { cookie } });
+    const item = res.json().items[0];
+    expect(item).not.toHaveProperty('destPath');
+    expect(item.originalName).toBe('IMG.CR3');
+  });
 });

@@ -7,6 +7,12 @@ export interface ServerEnv {
   dataDir: string;
   backupDir: string;
   frontendDir: string;
+  /** Set the Secure flag on session cookies (enable when serving over HTTPS). */
+  secureCookies: boolean;
+  /** Trust X-Forwarded-* headers from a reverse proxy (needed for secure cookies behind TLS). */
+  trustProxy: boolean;
+  /** Initial admin password for first boot; defaults to "admin" (forced change on login). */
+  adminInitialPassword: string;
 }
 
 export function loadEnv(): ServerEnv {
@@ -23,5 +29,8 @@ export function loadEnv(): ServerEnv {
     dataDir,
     backupDir,
     frontendDir,
+    secureCookies: process.env.FK_SECURE_COOKIES === 'true',
+    trustProxy: process.env.FK_TRUST_PROXY === 'true',
+    adminInitialPassword: process.env.FK_ADMIN_PASSWORD ?? 'admin',
   };
 }

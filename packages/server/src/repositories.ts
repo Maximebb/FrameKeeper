@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
-import type { BackupSession, FileRecord, ServerConfig, SessionStatus } from '@framekeeper/shared';
+import type { BackupSession, FilePublicRecord, FileRecord, ServerConfig, SessionStatus } from '@framekeeper/shared';
 
 export interface UserRow {
   id: number;
@@ -200,7 +200,7 @@ export class Repositories {
       .run(sha256, size, originalName, destPath, sessionId);
   }
 
-  listFiles(search: string | undefined, limit: number, offset: number): { total: number; items: FileRecord[] } {
+  listFiles(search: string | undefined, limit: number, offset: number): { total: number; items: FilePublicRecord[] } {
     const where = search ? 'WHERE original_name LIKE ? OR sha256 LIKE ?' : '';
     const params = search ? [`%${search}%`, `${search}%`] : [];
     const total = (
@@ -209,7 +209,7 @@ export class Repositories {
     const rows = this.db
       .prepare(`SELECT * FROM files ${where} ORDER BY id DESC LIMIT ? OFFSET ?`)
       .all(...params, limit, offset) as Record<string, unknown>[];
-    return { total, items: rows.map(toFile) };
+    return { total, items: rows.map(toPublicFile) };
   }
 }
 
@@ -241,4 +241,9 @@ function toFile(row: Record<string, unknown>): FileRecord {
     sessionId: (row.session_id as number | null) ?? null,
     backedUpAt: row.backed_up_at as string,
   };
+}
+
+function toPublicFile(row: Record<string, unknown>): FilePublicRecord {
+  const { destPath: _destPath, ...file } = toFile(row);
+  return file;
 }

@@ -71,7 +71,7 @@ try {
   res = await fetch(`${base}/api/auth/change-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', cookie },
-    body: JSON.stringify({ currentPassword: 'admin', newPassword: 'correct-horse-battery' }),
+    body: JSON.stringify({ currentPassword: 'admin', newPassword: 'correct-horse-battery1' }),
   });
   check(res.ok, 'password change accepted');
 

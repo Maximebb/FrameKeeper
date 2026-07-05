@@ -82,6 +82,8 @@ describe('first login flow', () => {
     for (const [newPassword, error] of [
       ['short', 'password_too_short'],
       ['admin', 'password_too_short'],
+      ['password1', 'password_too_weak'],
+      ['abcdefgh', 'password_too_weak'],
     ] as const) {
       const res = await t.app.inject({
         method: 'POST',
@@ -188,6 +190,9 @@ describe('API tokens', () => {
       ['GET', '/api/config'],
       ['GET', '/api/tokens'],
       ['POST', '/api/tokens'],
+      ['GET', '/api/files'],
+      ['GET', '/api/sessions'],
+      ['GET', '/api/status'],
     ] as const) {
       const res = await t.app.inject({
         method,
@@ -197,5 +202,21 @@ describe('API tokens', () => {
       });
       expect(res.statusCode, `${method} ${url}`).toBe(403);
     }
+  });
+
+  it('rate-limits repeated failed login attempts', async () => {
+    for (let i = 0; i < 10; i++) {
+      await t.app.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        payload: { username: 'admin', password: 'wrong' },
+      });
+    }
+    const blocked = await t.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'admin', password: 'wrong' },
+    });
+    expect(blocked.statusCode).toBe(429);
   });
 });
