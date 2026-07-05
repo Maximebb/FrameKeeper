@@ -7,6 +7,7 @@ COPY packages/server/package.json packages/server/
 COPY packages/frontend/package.json packages/frontend/
 RUN npm ci -w @framekeeper/shared -w @framekeeper/server -w @framekeeper/frontend --include-workspace-root=false
 COPY tsconfig.base.json ./
+COPY docs/USAGE.md docs/USAGE.md
 COPY packages ./packages
 RUN npm run build -w @framekeeper/shared \
  && npm run build -w @framekeeper/server \
