@@ -1,5 +1,9 @@
+import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify(execFile);
 
 export interface CameraCard {
   /** Volume root, e.g. "E:\\" */
@@ -7,7 +11,7 @@ export interface CameraCard {
   label: string;
 }
 
-/** The subset of drivelist's Drive we rely on (kept local so tests don't need the native module). */
+/** Shape returned by Windows removable-volume enumeration (kept local for unit tests). */
 export interface DetectedDrive {
   isRemovable: boolean;
   isSystem: boolean;
@@ -15,7 +19,7 @@ export interface DetectedDrive {
   mountpoints: { path: string; label?: string | null }[];
 }
 
-/** Pure mapping from drivelist output to candidate cards (one per mountpoint). */
+/** Pure mapping from detected drives to candidate cards (one per mountpoint). */
 export function mapDrivesToCards(drives: DetectedDrive[]): CameraCard[] {
   return drives
     .filter((drive) => drive.isRemovable && !drive.isSystem)
@@ -32,7 +36,7 @@ export function mapDrivesToCards(drives: DetectedDrive[]): CameraCard[] {
 
 /**
  * Lists removable volumes that look like camera cards (contain a DCIM folder).
- * On Windows this uses drivelist, which calls the Win32 device APIs directly.
+ * On Windows this queries removable volumes via PowerShell/WMI (Win32_LogicalDisk).
  * On other platforms it honors FK_WATCH_DIRS (";"-separated paths) to support
  * development, CI and the smoke test.
  */
@@ -50,11 +54,34 @@ export async function listCameraCards(): Promise<CameraCard[]> {
 
 async function listRemovableRootsWindows(): Promise<CameraCard[]> {
   try {
-    // Imported lazily so the native module only loads on the Windows path.
-    const { list } = await import('drivelist');
-    return mapDrivesToCards((await list()) as DetectedDrive[]);
+    const script =
+      'Get-CimInstance Win32_LogicalDisk | Where-Object { $_.DriveType -eq 2 } | ' +
+      'Select-Object Description, VolumeName, DeviceID | ConvertTo-Json -Compress';
+    const { stdout } = await execFileAsync(
+      'powershell.exe',
+      ['-NoProfile', '-Command', script],
+      { windowsHide: true, maxBuffer: 1024 * 1024 }
+    );
+    const trimmed = stdout.trim();
+    if (!trimmed) return [];
+    const parsed = JSON.parse(trimmed) as
+      | { DeviceID: string; VolumeName?: string | null; Description?: string | null }
+      | { DeviceID: string; VolumeName?: string | null; Description?: string | null }[];
+    const disks = Array.isArray(parsed) ? parsed : [parsed];
+    const drives: DetectedDrive[] = disks.map((disk) => ({
+      isRemovable: true,
+      isSystem: false,
+      description: disk.Description,
+      mountpoints: [
+        {
+          path: disk.DeviceID.endsWith('\\') ? disk.DeviceID : `${disk.DeviceID}\\`,
+          label: disk.VolumeName,
+        },
+      ],
+    }));
+    return mapDrivesToCards(drives);
   } catch (err) {
-    console.error('drivelist enumeration failed:', (err as Error).message);
+    console.error('removable drive enumeration failed:', (err as Error).message);
     return [];
   }
 }

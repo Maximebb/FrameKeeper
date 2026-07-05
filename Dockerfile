@@ -4,9 +4,8 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY packages/shared/package.json packages/shared/
 COPY packages/server/package.json packages/server/
-COPY packages/client/package.json packages/client/
 COPY packages/frontend/package.json packages/frontend/
-RUN npm ci --workspaces --include-workspace-root
+RUN npm ci -w @framekeeper/shared -w @framekeeper/server -w @framekeeper/frontend --include-workspace-root=false
 COPY tsconfig.base.json ./
 COPY packages ./packages
 RUN npm run build -w @framekeeper/shared \

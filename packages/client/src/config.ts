@@ -14,7 +14,7 @@ export interface ClientConfig {
 
 export function loadConfig(): ClientConfig {
   const configPath =
-    process.env.FK_CLIENT_CONFIG ?? path.join(path.dirname(__dirname), '..', 'config.yaml');
+    process.env.FK_CLIENT_CONFIG ?? path.join(__dirname, '..', 'config.yaml');
   if (!fs.existsSync(configPath)) {
     throw new Error(
       `Client config not found at ${configPath}. Copy config.example.yaml to config.yaml and fill in serverUrl/apiToken.`
