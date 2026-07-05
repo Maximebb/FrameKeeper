@@ -5,11 +5,30 @@ import { hashPassword, hashToken, randomId, randomToken, verifyPassword, verifyT
 const SESSION_COOKIE = 'fk_session';
 const SESSION_TTL_HOURS = 24 * 7;
 
+const COMMON_PASSWORDS = new Set([
+  'admin',
+  'password',
+  'password1',
+  'password123',
+  '12345678',
+  '123456789',
+  'qwerty123',
+  'letmein1',
+  'welcome1',
+  'changeme',
+  'framekeeper',
+]);
+
 export interface AuthContext {
   kind: 'user' | 'token';
   userId?: number;
   mustChangePassword?: boolean;
   tokenId?: string;
+}
+
+export interface AuthOptions {
+  secureCookies?: boolean;
+  adminInitialPassword?: string;
 }
 
 declare module 'fastify' {
@@ -18,9 +37,18 @@ declare module 'fastify' {
   }
 }
 
-export function seedAdmin(repos: Repositories): void {
+/** Validates a new password against length, complexity, and a common-password denylist. */
+export function validateNewPassword(password: string): 'password_too_short' | 'password_too_weak' | null {
+  if (password.length < 8) return 'password_too_short';
+  if (COMMON_PASSWORDS.has(password.toLowerCase())) return 'password_too_weak';
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return 'password_too_weak';
+  return null;
+}
+
+export function seedAdmin(repos: Repositories, initialPassword = 'admin'): void {
   if (repos.countUsers() === 0) {
-    repos.createUser('admin', hashPassword('admin'), true);
+    const isDefault = initialPassword === 'admin';
+    repos.createUser('admin', hashPassword(initialPassword), isDefault);
   }
 }
 
@@ -72,7 +100,9 @@ function authenticateRequest(repos: Repositories, request: FastifyRequest): Auth
  * Everything under /api requires auth except POST /api/auth/login.
  * Static frontend assets are served unauthenticated; the SPA enforces login.
  */
-export function registerAuth(app: FastifyInstance, repos: Repositories): void {
+export function registerAuth(app: FastifyInstance, repos: Repositories, options: AuthOptions = {}): void {
+  const secureCookies = options.secureCookies ?? false;
+
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const url = request.url.split('?')[0];
     if (!url.startsWith('/api/')) return; // static assets
@@ -92,7 +122,14 @@ export function registerAuth(app: FastifyInstance, repos: Repositories): void {
     request.auth = auth;
   });
 
-  app.post('/api/auth/login', async (request, reply) => {
+  app.post('/api/auth/login', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (request, reply) => {
     const { username, password } = (request.body ?? {}) as { username?: string; password?: string };
     if (!username || !password) return reply.code(400).send({ error: 'missing_credentials' });
 
@@ -111,6 +148,7 @@ export function registerAuth(app: FastifyInstance, repos: Repositories): void {
     reply.setCookie('fk_session', `${sessionId}.${secret}`, {
       httpOnly: true,
       sameSite: 'strict',
+      secure: secureCookies,
       path: '/',
       maxAge: SESSION_TTL_HOURS * 3600,
     });
@@ -123,7 +161,7 @@ export function registerAuth(app: FastifyInstance, repos: Repositories): void {
       const sessionId = cookie.slice(0, cookie.indexOf('.'));
       repos.deleteWebSession(sessionId);
     }
-    reply.clearCookie(SESSION_COOKIE, { path: '/' });
+    reply.clearCookie(SESSION_COOKIE, { path: '/', secure: secureCookies });
     return { ok: true };
   });
 
@@ -146,8 +184,8 @@ export function registerAuth(app: FastifyInstance, repos: Repositories): void {
       newPassword?: string;
     };
     if (!currentPassword || !newPassword) return reply.code(400).send({ error: 'missing_fields' });
-    if (newPassword.length < 8) return reply.code(400).send({ error: 'password_too_short' });
-    if (newPassword === 'admin') return reply.code(400).send({ error: 'password_too_weak' });
+    const passwordError = validateNewPassword(newPassword);
+    if (passwordError) return reply.code(400).send({ error: passwordError });
 
     const user = repos.getUserById(auth.userId)!;
     if (!verifyPassword(currentPassword, user.password_hash)) {
@@ -158,7 +196,7 @@ export function registerAuth(app: FastifyInstance, repos: Repositories): void {
   });
 }
 
-/** Guard for browser-only management routes (config, tokens). */
+/** Guard for browser-only management routes (config, tokens, history). */
 export function requireUser(request: FastifyRequest, reply: FastifyReply): boolean {
   if (request.auth?.kind !== 'user') {
     reply.code(403).send({ error: 'user_session_required' });

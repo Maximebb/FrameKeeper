@@ -49,7 +49,7 @@ export function History() {
           <tbody>
             {files.map((f) => (
               <tr key={f.id}>
-                <td title={f.destPath}>{f.originalName}</td>
+                <td title={f.sha256}>{f.originalName}</td>
                 <td>{formatBytes(f.size)}</td>
                 <td class="mono" title={f.sha256}>
                   {f.sha256.slice(0, 16)}…

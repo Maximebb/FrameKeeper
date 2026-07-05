@@ -46,6 +46,9 @@ Environment variables (see `docker-compose.yml`):
 | `FK_DATA_DIR` | `/data` | SQLite database location |
 | `FK_BACKUP_DIR` | `/backups` | Where backed-up files are stored (`YYYY/MM/DD/...`) |
 | `FK_FRONTEND_DIR` | *(built into image)* | Static frontend files (override only for custom builds) |
+| `FK_SECURE_COOKIES` | `false` | Set to `true` when serving over HTTPS (sets `Secure` on session cookies) |
+| `FK_TRUST_PROXY` | `false` | Set to `true` when behind a TLS reverse proxy |
+| `FK_ADMIN_PASSWORD` | `admin` | Initial admin password on first boot (default forces change on login) |
 
 The compose file mounts a named volume for the database and `./backups` on the host for photo
 storage. Runtime settings (ignore patterns, auto-confirm) live in the database and are edited

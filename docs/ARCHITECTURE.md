@@ -95,9 +95,10 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 - **Client machines**: bearer token `fk_<tokenId>_<secret>` created in the frontend
   (Settings -> API tokens). The server looks up by `tokenId`, verifies the secret hash, updates
   `last_used_at`. Tokens are revocable (`revoked_at`).
-- **Route classes**: management routes (config, tokens, session confirm/dismiss) additionally
-  require a *user* session — bearer tokens get 403 (`requireUser` in `routes.ts`). Client routes
-  (announce, digests, upload, progress, complete) accept either credential.
+- **Route classes**: management and read routes (config, tokens, session confirm/dismiss,
+  file index, session history, live status, SSE) require a *user* session — bearer tokens get
+  403 (`requireUser` in `routes.ts`). Client routes (announce, digests, upload, progress,
+  complete, single-session poll) accept either credential.
 
 ## Backup workflow
 
