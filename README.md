@@ -18,11 +18,20 @@ packages/
   shared/     Shared types + hashing helpers
 ```
 
-Contributing (human or agent)? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — it
-describes the design, core invariants and conventions. Outstanding work is tracked in
-[docs/TODO.md](docs/TODO.md).
+## Documentation
 
-## Server deployment (Docker)
+| Doc | Audience |
+| --- | --- |
+| [docs/USAGE.md](docs/USAGE.md) | Operators — workflow, backup process, deployment models. Also rendered in the frontend **Guide** page (same file, bundled at build time). |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Contributors — design, invariants, conventions |
+| [docs/TODO.md](docs/TODO.md) | Outstanding work |
+
+## Build and deploy
+
+FrameKeeper is always **client–server**: the server stores backups and serves the web UI; the
+client runs on the Windows machine where you insert SD cards.
+
+### Server (Docker)
 
 ```bash
 docker compose up -d --build
@@ -33,24 +42,19 @@ Environment variables (see `docker-compose.yml`):
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `8080` | HTTP listen port |
+| `HOST` | `0.0.0.0` | Bind address |
 | `FK_DATA_DIR` | `/data` | SQLite database location |
 | `FK_BACKUP_DIR` | `/backups` | Where backed-up files are stored (`YYYY/MM/DD/...`) |
+| `FK_FRONTEND_DIR` | *(built into image)* | Static frontend files (override only for custom builds) |
 
-Everything else (ignore patterns, auto-confirm) is stored in the database and configured from
-the frontend Settings page.
+The compose file mounts a named volume for the database and `./backups` on the host for photo
+storage. Runtime settings (ignore patterns, auto-confirm) live in the database and are edited
+from the frontend Settings page.
 
-### First login
+For HTTPS, TLS, first login, API tokens, and deployment topology choices, see
+[docs/USAGE.md](docs/USAGE.md).
 
-Open `http://<server>:8080`, sign in with `admin` / `admin`. You will be forced to set a new
-password before anything else is accessible. All API endpoints require authentication; passwords
-and tokens are stored salted and hashed (scrypt / salted SHA-256), never in clear.
-
-### Create an API token for each client
-
-Settings -> API tokens -> enter a name -> Create. The token (`fk_..._...`) is displayed **once**;
-copy it into the client's `config.yaml`. Tokens can be revoked from the same page.
-
-## Client setup (Windows)
+### Client (Windows)
 
 ```powershell
 cd packages/client
@@ -59,18 +63,9 @@ npm run build -w @framekeeper/client   # from the repo root
 npm run start -w @framekeeper/client   # run in the foreground to test
 ```
 
-`config.yaml` options:
+Config path override: `FK_CLIENT_CONFIG`. Full option reference: [docs/USAGE.md](docs/USAGE.md).
 
-| Key | Default | Purpose |
-| --- | --- | --- |
-| `serverUrl` | — | Base URL of the server |
-| `apiToken` | — | Token created in the frontend |
-| `clientName` | hostname | Name shown in the frontend |
-| `pollIntervalMs` | `3000` | Drive scan interval |
-| `deleteAfterBackup` | `false` | Delete card files after server-verified backup |
-| `ignorePatterns` | `[]` | File name patterns to skip (`*.THM`, ...) |
-
-### Install as a Windows service (starts with the PC)
+#### Install as a Windows service
 
 From an **elevated** shell:
 
@@ -80,28 +75,20 @@ npm run service:install     # registers "FrameKeeper Client"
 npm run service:uninstall   # removes it
 ```
 
-## Backup integrity flow
+Build the client once before installing the service (`npm run build -w @framekeeper/client`
+from the repo root).
 
-1. Client computes the SHA-256 of each file on the card.
-2. `GET /api/digests/:sha` — if the server already has it, the upload is skipped.
-3. Otherwise the file is streamed to the server, which writes it to a temp file, **re-reads it
-   from disk and recomputes the digest**, and only acknowledges on a match (a mismatch deletes
-   the partial file and returns an error).
-4. Only after that acknowledgement — and only when `deleteAfterBackup: true` — does the client
-   remove the file from the card.
-
-## Development
+### Development
 
 ```bash
 npm install
 npm run build          # shared -> server -> client -> frontend
 npm test               # unit tests for all packages (vitest)
 npm run smoke          # end-to-end test with a fake card (uses FK_WATCH_DIRS)
+npm run start:server   # local server (set env vars as needed)
+npm run start:client   # local client (needs config.yaml)
 npm run dev:frontend   # Vite dev server proxying /api to localhost:8080
 ```
 
 On non-Windows platforms the client watches directories listed in `FK_WATCH_DIRS`
 (`;`-separated) instead of removable volumes, which is how the smoke test simulates a card.
-
-Note: run the server behind HTTPS (reverse proxy) when exposing it beyond your LAN — API tokens
-travel as bearer headers.

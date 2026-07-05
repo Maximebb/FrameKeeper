@@ -5,6 +5,7 @@ import { ChangePassword } from './views/ChangePassword';
 import { Dashboard } from './views/Dashboard';
 import { History } from './views/History';
 import { Settings } from './views/Settings';
+import { Guide } from './views/Guide';
 
 type AuthState =
   | { phase: 'loading' }
@@ -12,11 +13,12 @@ type AuthState =
   | { phase: 'must-change'; username: string }
   | { phase: 'ready'; username: string };
 
-type Tab = 'dashboard' | 'history' | 'settings';
+type Tab = 'dashboard' | 'history' | 'settings' | 'guide';
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>({ phase: 'loading' });
   const [tab, setTab] = useState<Tab>('dashboard');
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     api
@@ -50,8 +52,11 @@ export function App() {
     return () => window.removeEventListener('unhandledrejection', handler);
   }, []);
 
+  if (showGuide) return <Guide onBack={() => setShowGuide(false)} />;
+
   if (auth.phase === 'loading') return <div class="login-wrap muted">Loading…</div>;
-  if (auth.phase === 'anonymous') return <Login onLoggedIn={onLoggedIn} />;
+  if (auth.phase === 'anonymous')
+    return <Login onLoggedIn={onLoggedIn} onShowGuide={() => setShowGuide(true)} />;
   if (auth.phase === 'must-change')
     return <ChangePassword forced onDone={() => setAuth({ phase: 'ready', username: auth.username })} />;
 
@@ -71,6 +76,9 @@ export function App() {
           <button class={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>
             Settings
           </button>
+          <button class={tab === 'guide' ? 'active' : ''} onClick={() => setTab('guide')}>
+            Guide
+          </button>
         </nav>
         <div class="row">
           <span class="muted">{auth.username}</span>
@@ -83,6 +91,7 @@ export function App() {
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'history' && <History />}
         {tab === 'settings' && <Settings />}
+        {tab === 'guide' && <Guide />}
       </main>
     </>
   );
