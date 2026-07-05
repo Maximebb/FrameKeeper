@@ -1,8 +1,8 @@
 // Registers the FrameKeeper client as a Windows service (runs at boot).
 // Usage: npm run service:install  (from packages/client, requires admin shell)
-const { execSync } = require('node:child_process');
-const fs = require('node:fs');
-const path = require('node:path');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const { Service } = require('node-windows');
 
 /** WinSW service name (node-windows uses `<id>` = `${svc.id}.exe`). */

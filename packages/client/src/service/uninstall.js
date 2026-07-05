@@ -1,5 +1,5 @@
 // Removes the FrameKeeper client Windows service.
-const path = require('node:path');
+const path = require('path');
 const { Service } = require('node-windows');
 
 const svc = new Service({

@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import { Readable } from 'node:stream';
+import fs from 'fs';
+import { Readable } from 'stream';
 import type { AnnounceRequest, BackupSession, ProgressUpdate } from '@framekeeper/shared';
 import type { ClientConfig } from './config';
 

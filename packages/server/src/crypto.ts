@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, createHash, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scryptSync, createHash, timingSafeEqual } from 'crypto';
 
 const SCRYPT_N = 16384;
 const SCRYPT_R = 8;

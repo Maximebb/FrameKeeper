@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createHash } from 'node:crypto';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import { createHash } from 'crypto';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { matchesAnyPattern, sha256File } from '../src';
 
 describe('sha256File', () => {

@@ -1,9 +1,9 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyRateLimit from '@fastify/rate-limit';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { openDatabase } from '../src/db';
 import { Repositories } from '../src/repositories';
 import { registerAuth, seedAdmin } from '../src/auth';

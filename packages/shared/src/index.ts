@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
-import { createReadStream } from 'node:fs';
+import { createHash } from 'crypto';
+import { createReadStream } from 'fs';
 
 export type SessionStatus =
   | 'pending'
@@ -72,7 +72,7 @@ export function sha256File(path: string): Promise<string> {
     const hash = createHash('sha256');
     const stream = createReadStream(path);
     stream.on('error', reject);
-    stream.on('data', (chunk) => hash.update(chunk));
+    stream.on('data', (chunk: Buffer) => hash.update(chunk));
     stream.on('end', () => resolve(hash.digest('hex')));
   });
 }

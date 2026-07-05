@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs from 'fs';
 import { matchesAnyPattern, sha256File } from '@framekeeper/shared';
 import type { ClientConfig } from './config';
 import { ServerApi } from './api';

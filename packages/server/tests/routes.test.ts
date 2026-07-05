@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createHash } from 'node:crypto';
+import { createHash } from 'crypto';
 import { buildTestApp, createToken, loginAsAdmin, type TestApp } from './helpers';
 
 let t: TestApp;
