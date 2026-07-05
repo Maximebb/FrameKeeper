@@ -24,7 +24,6 @@ packages/
 | --- | --- |
 | [docs/USAGE.md](docs/USAGE.md) | Operators — workflow, backup process, deployment models. Also rendered in the frontend **Guide** page (same file, bundled at build time). |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Contributors — design, invariants, conventions |
-| [docs/TODO.md](docs/TODO.md) | Outstanding work |
 
 ## Build and deploy
 

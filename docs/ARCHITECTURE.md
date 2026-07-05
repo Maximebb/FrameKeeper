@@ -2,7 +2,7 @@
 
 Steering document for contributors (human or agent). It reflects the code as implemented; if you
 change behavior described here, update this file in the same change. Known gaps and future work
-live in [TODO.md](TODO.md).
+are tracked as GitHub issues.
 
 ## System overview
 
@@ -118,7 +118,7 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
    insert `files` row, respond `{ ok, verified: true }`.
 6. Client applies invariant 2, reports progress (`POST /api/sessions/:id/progress`), and finally
    `POST /api/sessions/:id/complete` (with an error message if it aborted). The session becomes
-   `done` or `failed`. The client stops at the first failed file (no retry yet — see TODO).
+   `done` or `failed`. The client stops at the first failed file (no per-file retry yet).
 7. The frontend receives every session mutation as an SSE `session` event on `GET /api/events`.
 
 Session states: `pending -> confirmed -> running -> done | failed`, or `pending -> dismissed`.
