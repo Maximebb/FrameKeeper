@@ -10,7 +10,6 @@ Read the docs that match your change:
 | --- | --- |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design, invariants, and code conventions |
 | [docs/USAGE.md](docs/USAGE.md) | Operator workflow and configuration |
-| [docs/TODO.md](docs/TODO.md) | Known gaps and planned work |
 
 ## Pull request expectations
 
