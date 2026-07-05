@@ -60,6 +60,7 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 | `packages/frontend/src/` | Preact SPA (`App.tsx`, `views/`, `api.ts`) |
 | `scripts/smoke-test.mjs` | End-to-end test using a fake card directory |
 | `Dockerfile`, `docker-compose.yml` | Server container |
+| `docs/USAGE.md` | Operator guide (workflow, backup process, deployment models); bundled into the frontend Guide page at build time |
 | `.github/workflows/ci.yml` | CI: build, unit tests, smoke test |
 
 ## Core invariants — do not break these

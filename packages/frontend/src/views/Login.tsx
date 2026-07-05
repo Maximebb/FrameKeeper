@@ -1,7 +1,13 @@
 import { useState } from 'preact/hooks';
 import { api } from '../api';
 
-export function Login({ onLoggedIn }: { onLoggedIn: (username: string, mustChange: boolean) => void }) {
+export function Login({
+  onLoggedIn,
+  onShowGuide,
+}: {
+  onLoggedIn: (username: string, mustChange: boolean) => void;
+  onShowGuide: () => void;
+}) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -48,6 +54,9 @@ export function Login({ onLoggedIn }: { onLoggedIn: (username: string, mustChang
         {error && <div class="error-msg">{error}</div>}
         <button class="primary" style="width:100%" disabled={busy || !username || !password}>
           Sign in
+        </button>
+        <button type="button" class="ghost" style="width:100%;margin-top:0.75rem" onClick={onShowGuide}>
+          How it works
         </button>
       </form>
     </div>

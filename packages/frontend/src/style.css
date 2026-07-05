@@ -156,3 +156,33 @@ td.mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-
 .badge.done { border-color: var(--ok); color: var(--ok); }
 .badge.failed, .badge.dismissed { border-color: var(--danger); color: var(--danger); }
 .badge.pending { border-color: var(--warn); color: var(--warn); }
+
+.guide-page { max-width: 960px; width: 100%; margin: 0 auto; padding: 1.4rem; min-height: 100vh; }
+.guide-toolbar { margin-bottom: 1rem; }
+
+.guide-content {
+  background: var(--panel);
+  border: 1px solid #2a3140;
+  border-radius: var(--radius);
+  padding: 1.6rem 1.8rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+.guide-content h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+.guide-content h2 { margin: 1.8rem 0 0.8rem; font-size: 1.15rem; border-bottom: 1px solid #2a3140; padding-bottom: 0.35rem; }
+.guide-content h3 { margin: 1.4rem 0 0.6rem; font-size: 1rem; color: var(--muted); }
+.guide-content p { margin: 0.6rem 0; }
+.guide-content ul, .guide-content ol { margin: 0.5rem 0 0.8rem; padding-left: 1.4rem; }
+.guide-content li { margin: 0.35rem 0; }
+.guide-content strong { color: var(--text); }
+.guide-content code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--panel-2);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+.guide-content table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 1rem; font-size: 0.9rem; }
+.guide-content th, .guide-content td { text-align: left; padding: 0.55rem 0.65rem; border: 1px solid #2a3140; vertical-align: top; }
+.guide-content th { background: var(--panel-2); color: var(--muted); font-weight: 600; }
+.guide-content hr { border: none; border-top: 1px solid #2a3140; margin: 1.5rem 0; }

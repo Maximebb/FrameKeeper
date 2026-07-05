@@ -8,7 +8,11 @@
     "jsxImportSource": "preact",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@docs/*": ["../../docs/*"]
+    }
   },
   "include": ["src"]
 }
