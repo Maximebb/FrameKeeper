@@ -24,6 +24,11 @@ async function main(): Promise<void> {
     bodyLimit: 1024 * 1024, // JSON bodies only; uploads stream through the octet-stream parser
   });
 
+  // HTTPS-only mechanisms (HSTS, upgrade-insecure-requests) must stay off for
+  // plain-HTTP deployments: browsers would force-upgrade every request to
+  // https:// and the app would fail to load. FK_SECURE_COOKIES already marks
+  // HTTPS deployments, so reuse it here.
+  const servedOverHttps = env.secureCookies;
   await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
       directives: {
@@ -35,8 +40,10 @@ async function main(): Promise<void> {
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         frameAncestors: ["'none'"],
+        upgradeInsecureRequests: servedOverHttps ? [] : null,
       },
     },
+    strictTransportSecurity: servedOverHttps,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   });
 
