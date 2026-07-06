@@ -41,13 +41,13 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 
 | Path | Role |
 | --- | --- |
-| `packages/shared/src/index.ts` | API types (`AnnounceRequest`, `BackupSession`, ...), `sha256File`, `matchesAnyPattern` |
-| `packages/server/src/index.ts` | Composition root: env, DB, auth, routes, static frontend |
-| `packages/server/src/env.ts` | Environment variables (`PORT`, `FK_DATA_DIR`, `FK_BACKUP_DIR`, `FK_FRONTEND_DIR`) |
+| `packages/shared/src/index.ts` | API types (`AnnounceRequest`, `BackupSession`, `FileRecord`, `FilePublicRecord`, ...), `sha256File`, `matchesAnyPattern` |
+| `packages/server/src/index.ts` | Composition root: env, helmet, rate-limit, DB, auth, routes, static frontend |
+| `packages/server/src/env.ts` | Environment variables (`PORT`, `HOST`, `FK_DATA_DIR`, `FK_BACKUP_DIR`, `FK_FRONTEND_DIR`, `FK_SECURE_COOKIES`, `FK_TRUST_PROXY`, `FK_ADMIN_PASSWORD`) |
 | `packages/server/src/db.ts` | Schema creation (`node:sqlite`, WAL). No migration framework: additive `CREATE TABLE IF NOT EXISTS` |
 | `packages/server/src/crypto.ts` | scrypt password hashing, salted-SHA-256 token hashing, random ids/secrets |
 | `packages/server/src/repositories.ts` | All SQL, mapping rows to camelCase shared types |
-| `packages/server/src/auth.ts` | Global `onRequest` auth hook + `/api/auth/*` routes + admin seeding |
+| `packages/server/src/auth.ts` | Global `onRequest` auth hook + `/api/auth/*` routes, password policy, login rate limit, admin seeding |
 | `packages/server/src/routes.ts` | Everything else under `/api/*` |
 | `packages/server/src/storage.ts` | `StorageEngine`: temp write, digest verify, dated layout, record |
 | `packages/server/src/events.ts` | `EventBus`: SSE broadcaster for the frontend |
@@ -79,9 +79,12 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
    (`scrypt$N$r$p$salt$hash`). Web session secrets and API token secrets: salted SHA-256 (they
    are 256-bit random values, so a slow KDF is unnecessary). All comparisons are constant-time.
    API tokens are shown exactly once, at creation.
-5. **Forced first-login password change.** The DB is seeded with `admin`/`admin` and
-   `must_change_password = 1`; while set, only `/api/auth/change-password`, `/logout`, `/me` are
-   allowed (403 `password_change_required` otherwise).
+5. **Forced first-login password change.** On first boot the DB is seeded with user `admin` and
+   password from `FK_ADMIN_PASSWORD` (default `admin`). The default password always sets
+   `must_change_password = 1`; a custom initial password does not. While the flag is set, only
+   `/api/auth/change-password`, `/logout`, `/me` are allowed (403 `password_change_required`
+   otherwise). New passwords must be at least 8 characters with letters and digits and cannot be
+   on a common-password denylist (`validateNewPassword` in `auth.ts`).
 6. **Digests are global dedupe keys.** `files.sha256` is unique; the same content is stored once
    regardless of card or client.
 7. **Separation of duties.** Detection and card I/O live only in the client; storage and
@@ -91,7 +94,9 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 ## Authentication model
 
 - **Browser**: `POST /api/auth/login` issues an `HttpOnly` cookie `fk_session=<id>.<secret>`;
-  the secret's salted hash is stored in `web_sessions` with a 7-day expiry.
+  the secret's salted hash is stored in `web_sessions` with a 7-day expiry. The `Secure` flag is
+  set when `FK_SECURE_COOKIES=true` (required behind HTTPS). Login is rate-limited to 10 attempts
+  per minute per IP (`@fastify/rate-limit` on the login route only).
 - **Client machines**: bearer token `fk_<tokenId>_<secret>` created in the frontend
   (Settings -> API tokens). The server looks up by `tokenId`, verifies the secret hash, updates
   `last_used_at`. Tokens are revocable (`revoked_at`).
@@ -99,6 +104,20 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
   file index, session history, live status, SSE) require a *user* session — bearer tokens get
   403 (`requireUser` in `routes.ts`). Client routes (announce, digests, upload, progress,
   complete, single-session poll) accept either credential.
+- **API path non-disclosure**: `GET /api/files` returns `FilePublicRecord` items (no `destPath`).
+  Internal storage paths stay server-side only; `FileRecord` with `destPath` is used internally
+  in `repositories.ts` and `storage.ts`.
+
+## HTTP security
+
+- **`@fastify/helmet`** is registered in `index.ts` with CSP (`default-src 'self'`, no frames),
+  `X-Content-Type-Options`, and `Referrer-Policy: strict-origin-when-cross-origin`.
+- **`FK_TRUST_PROXY=true`** enables Fastify's `trustProxy` so `Secure` cookies and client IP
+  detection work correctly behind a TLS reverse proxy.
+- **Digest check oracle**: content-addressed dedup requires clients to call
+  `GET /api/digests/:sha` before upload. Bearer tokens cannot enumerate the full file index
+  (restricted by `requireUser` on `GET /api/files`), which limits digest discovery to hashes the
+  client already knows from scanning its card.
 
 ## Backup workflow
 
@@ -125,11 +144,14 @@ Session states: `pending -> confirmed -> running -> done | failed`, or `pending 
 
 ## Configuration
 
-- **Server**: bootstrap-only values come from env vars (`PORT`, `HOST`, `FK_DATA_DIR`,
-  `FK_BACKUP_DIR`, `FK_FRONTEND_DIR`) because they're needed before the DB opens. Everything
-  else lives in the `settings` table (currently `ignorePatterns`, `autoConfirm`) and is edited
-  via `GET/PUT /api/config` from the frontend. Add new server settings to the `settings` table,
-  `ServerConfig` in `packages/shared`, and the Settings view — not to env vars.
+- **Server**: bootstrap-only values come from env vars because they're needed before the DB opens:
+  - `PORT`, `HOST` — listen address
+  - `FK_DATA_DIR`, `FK_BACKUP_DIR`, `FK_FRONTEND_DIR` — storage and static file paths
+  - `FK_SECURE_COOKIES`, `FK_TRUST_PROXY` — HTTPS / reverse-proxy cookie and header handling
+  - `FK_ADMIN_PASSWORD` — initial admin password on first boot (see invariant 5)
+  Everything else lives in the `settings` table (currently `ignorePatterns`, `autoConfirm`) and
+  is edited via `GET/PUT /api/config` from the frontend. Add new server settings to the
+  `settings` table, `ServerConfig` in `packages/shared`, and the Settings view — not to env vars.
 - **Client**: everything in `config.yaml` (`serverUrl`, `apiToken`, `clientName`,
   `pollIntervalMs`, `deleteAfterBackup`, `ignorePatterns`). Path override: `FK_CLIENT_CONFIG`.
   Non-Windows platforms watch `FK_WATCH_DIRS` (`;`-separated) instead of removable volumes —
