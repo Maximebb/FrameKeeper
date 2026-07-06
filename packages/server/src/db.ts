@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import path from 'node:path';
+import path from 'path';
 
 export function openDatabase(dataDir: string): DatabaseSync {
   const db = new DatabaseSync(path.join(dataDir, 'framekeeper.db'));

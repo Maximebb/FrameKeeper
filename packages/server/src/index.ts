@@ -3,7 +3,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
-import fs from 'node:fs';
+import fs from 'fs';
 import { loadEnv } from './env';
 import { openDatabase } from './db';
 import { Repositories } from './repositories';

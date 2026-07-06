@@ -1,6 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 import { parse } from 'yaml';
 
 export interface ClientConfig {

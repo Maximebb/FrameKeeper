@@ -1,7 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { pipeline } from 'node:stream/promises';
-import type { Readable } from 'node:stream';
+import fs from 'fs';
+import path from 'path';
+import { pipeline } from 'stream/promises';
+import type { Readable } from 'stream';
 import { sha256File } from '@framekeeper/shared';
 import { Repositories } from './repositories';
 
