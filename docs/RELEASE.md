@@ -76,16 +76,24 @@ first install (preserved on upgrades), and registers/starts the
 ## One-time repository setup
 
 1. **`main` environment**: Settings → Environments → New environment `main`,
-   then add an environment *variable* `IMAGE_TAG` (e.g. `edge`).
+   then add an environment *variable* `IMAGE_TAG` (e.g. `edge`). All release
+   jobs declare `environment: main`, so environment secrets/variables are only
+   exposed to them. Set the deployment branch policy to **Selected branches
+   and tags** and allow both the `main` branch and the `v*` tag pattern —
+   otherwise the tag-triggered release jobs are rejected with "not allowed to
+   deploy". Don't add required reviewers unless you want to manually approve
+   every release run.
 2. **Tag protection**: Settings → Rules → Rulesets → New tag ruleset targeting
    `v*`, restricting creation/update/deletion. Add yourself (repo admin) to the
    bypass list so semantic-release (running with your PAT) and manual tags
    still work.
 3. **`RELEASE_TOKEN` secret**: create a fine-grained PAT scoped to this repo
-   with **Contents: Read and write**, and add it as an Actions secret named
-   `RELEASE_TOKEN`. This matters for two reasons: tags pushed with the default
-   `GITHUB_TOKEN` do **not** trigger other workflows (so the tag release would
-   never run), and the PAT lets semantic-release bypass the tag ruleset.
+   with **Contents: Read and write**, and add it as a secret named
+   `RELEASE_TOKEN` **on the `main` environment** (the semantic-release job
+   runs in that environment, so a repository-wide secret is not needed). This
+   matters for two reasons: tags pushed with the default `GITHUB_TOKEN` do
+   **not** trigger other workflows (so the tag release would never run), and
+   the PAT lets semantic-release bypass the tag ruleset.
 4. **GHCR package permissions**: after the first push creates the
    `framekeeper-server` package, make it public if you want unauthenticated
    pulls (package settings → Change visibility), and confirm the repository has

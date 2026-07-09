@@ -18,6 +18,9 @@ jobs:
   server-image:
     name: Build, push and promote server image
     runs-on: ubuntu-latest
+    # The "main" environment gates release credentials; its deployment policy
+    # must allow v* tags (not just the main branch) or this job is rejected.
+    environment: main
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
@@ -88,6 +91,7 @@ jobs:
   client-release:
     name: Package Windows client and attach to release
     runs-on: windows-latest
+    environment: main
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
