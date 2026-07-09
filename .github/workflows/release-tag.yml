@@ -1,0 +1,143 @@
+name: Release (tag)
+
+# Runs when a release tag (vX.Y.Z) is pushed — either manually or by the
+# semantic-release workflow. Builds and pushes the server image tagged with the
+# release version (promoting "latest" when appropriate), and attaches the
+# Windows client artifact + install script to the GitHub release.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  server-image:
+    name: Build, push and promote server image
+    runs-on: ubuntu-latest
+    # The "main" environment gates release credentials; its deployment policy
+    # must allow v* tags (not just the main branch) or this job is rejected.
+    environment: main
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Resolve image name
+        id: meta
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/framekeeper-server" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.image }}:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: imjasonh/setup-crane@feee3b6bb0d4c68370f256a4502498c9227e5c6b # v0.7
+
+      - name: Promote to latest (unless it would downgrade)
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          NEW_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          crane auth login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
+          NEW_VERSION="${NEW_TAG#v}"
+
+          if ! LATEST_DIGEST=$(crane digest "$IMAGE:latest" 2>/dev/null); then
+            echo "No existing 'latest' tag — promoting $NEW_TAG to latest."
+            crane tag "$IMAGE:$NEW_TAG" latest
+            exit 0
+          fi
+
+          # Find the release tag(s) the current "latest" points at. If it does
+          # not correspond to any vX.Y.Z tag we cannot compare versions, so we
+          # leave it alone.
+          CURRENT_VERSION=""
+          for t in $(crane ls "$IMAGE"); do
+            [[ "$t" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+            [[ "$t" == "$NEW_TAG" ]] && continue
+            if [[ "$(crane digest "$IMAGE:$t")" == "$LATEST_DIGEST" ]]; then
+              v="${t#v}"
+              if [[ -z "$CURRENT_VERSION" || "$(printf '%s\n%s\n' "$CURRENT_VERSION" "$v" | sort -V | tail -n1)" == "$v" ]]; then
+                CURRENT_VERSION="$v"
+              fi
+            fi
+          done
+
+          if [[ -z "$CURRENT_VERSION" ]]; then
+            echo "::warning::'latest' does not match any prior release tag; not promoting $NEW_TAG."
+            exit 0
+          fi
+
+          if [[ "$(printf '%s\n%s\n' "$CURRENT_VERSION" "$NEW_VERSION" | sort -V | tail -n1)" == "$NEW_VERSION" ]]; then
+            echo "Promoting $NEW_TAG to latest (current latest is v$CURRENT_VERSION)."
+            crane tag "$IMAGE:$NEW_TAG" latest
+          else
+            echo "Skipping 'latest' promotion: $NEW_TAG is older than current latest (v$CURRENT_VERSION)."
+          fi
+
+  client-release:
+    name: Package Windows client and attach to release
+    runs-on: windows-latest
+    environment: main
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build client
+        run: |
+          npm run build -w @framekeeper/shared
+          npm run build -w @framekeeper/client
+
+      - name: Package client artifact
+        run: node scripts/package-client.mjs ${{ github.ref_name }}
+
+      - name: Zip client artifact
+        shell: pwsh
+        run: Compress-Archive -Path dist-artifacts/framekeeper-client/* -DestinationPath "framekeeper-client-${{ github.ref_name }}.zip"
+
+      - name: Attach assets to GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # semantic-release creates the release right after pushing the tag;
+          # give it a couple of minutes before assuming the tag was manual.
+          FOUND=""
+          for i in $(seq 1 8); do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              FOUND=1
+              break
+            fi
+            echo "Release $TAG not found yet, retrying in 15s ($i/8)..."
+            sleep 15
+          done
+          if [ -z "$FOUND" ]; then
+            echo "Creating release $TAG with auto-generated notes."
+            gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
+          fi
+          gh release upload "$TAG" \
+            "framekeeper-client-$TAG.zip" \
+            scripts/install-framekeeper-client.ps1 \
+            --clobber

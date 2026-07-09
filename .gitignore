@@ -147,3 +147,6 @@ packages/client/config*.yaml
 !packages/client/config.example.yaml
 
 .smoke-tmp/
+
+# Release packaging output (scripts/package-client.mjs)
+dist-artifacts/

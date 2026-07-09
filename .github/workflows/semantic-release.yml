@@ -1,0 +1,39 @@
+name: Semantic release
+
+# Analyzes commits on main (Conventional Commits) and, when a release is
+# warranted, creates the vX.Y.Z tag and a GitHub release with generated notes.
+# The tag push then triggers the "Release (tag)" workflow, which publishes the
+# server image and attaches the client artifacts.
+#
+# RELEASE_TOKEN must be a PAT (contents: read/write) so that the tag created
+# here triggers other workflows — tags pushed with the default GITHUB_TOKEN do
+# not — and so it can bypass the tag protection ruleset. Falls back to
+# GITHUB_TOKEN so the workflow still runs before the secret is configured.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: semantic-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: semantic-release
+    runs-on: ubuntu-latest
+    # Runs in the "main" environment so RELEASE_TOKEN can live there as an
+    # environment secret instead of a repository-wide one.
+    environment: main
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: cycjimmy/semantic-release-action@16ca923e6ccbb50770c415a0ccd43709a8c5f7a4 # v4.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
