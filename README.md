@@ -24,6 +24,7 @@ packages/
 | --- | --- |
 | [docs/USAGE.md](docs/USAGE.md) | Operators — workflow, backup process, deployment models. Also rendered in the frontend **Guide** page (same file, bundled at build time). |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Contributors — design, invariants, conventions |
+| [docs/RELEASE.md](docs/RELEASE.md) | Maintainers — how releases are cut and published |
 
 ## Build and deploy
 
@@ -31,6 +32,15 @@ FrameKeeper is always **client–server**: the server stores backups and serves 
 client runs on the Windows machine where you insert SD cards.
 
 ### Server (Docker)
+
+Prebuilt images are published to GHCR on every release (see
+[docs/RELEASE.md](docs/RELEASE.md)):
+
+```bash
+docker pull ghcr.io/maximebb/framekeeper-server:latest
+```
+
+Or build locally:
 
 ```bash
 docker compose up -d --build
@@ -57,6 +67,21 @@ For HTTPS, TLS, first login, API tokens, and deployment topology choices, see
 [docs/USAGE.md](docs/USAGE.md).
 
 ### Client (Windows)
+
+#### Install from a release (recommended)
+
+From an **elevated** PowerShell:
+
+```powershell
+iwr -useb https://github.com/Maximebb/FrameKeeper/releases/latest/download/install-framekeeper-client.ps1 | iex
+```
+
+The script downloads the latest client release, prompts for your server URL and
+API token, and registers the "FrameKeeper Client" Windows service. Re-run it to
+upgrade (your `config.yaml` is preserved). See
+[docs/RELEASE.md](docs/RELEASE.md) for details and overrides.
+
+#### Run from source
 
 ```powershell
 cd packages/client
