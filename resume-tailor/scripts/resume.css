@@ -1,0 +1,229 @@
+/* Resume stylesheet: screen preview + print (PDF) output.
+   Design goals: single column, clear typographic hierarchy, one accent color,
+   ATS-friendly (real text only, no icons/images for content), one page. */
+
+:root {
+  --accent: #1a5276;
+  --ink: #1c2733;
+  --ink-soft: #4a5763;
+  --hairline: #d4dade;
+  --page-width: 8.5in;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+  font-size: 9.75pt;
+  line-height: 1.42;
+  color: var(--ink);
+  background: #eceff1;
+}
+
+/* Screen preview: render as a letter-sized page card. Print margins are applied
+   by Puppeteer / @page, so the padding below is stripped in print. */
+.resume {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0.6in;
+  background: #ffffff;
+}
+
+@media screen {
+  body { padding: 24px 12px; }
+  .resume { box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12); }
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 8pt;
+  margin-bottom: 10pt;
+}
+
+.name {
+  font-size: 21pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+.headline {
+  font-size: 11pt;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-top: 2pt;
+}
+
+.contact {
+  margin-top: 4pt;
+  font-size: 8.75pt;
+  color: var(--ink-soft);
+}
+
+.contact a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.contact .sep {
+  margin: 0 5px;
+  color: var(--hairline);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  margin-bottom: 9pt;
+}
+
+.section-title {
+  font-size: 9.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 2pt;
+  margin-bottom: 5pt;
+}
+
+.summary {
+  color: var(--ink);
+}
+
+/* ---------- Experience ---------- */
+
+.entry {
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+
+.entry:last-child {
+  margin-bottom: 0;
+}
+
+.entry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.entry-role {
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+
+.entry-company {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.entry-meta {
+  font-size: 8.75pt;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.entry ul {
+  margin-top: 2.5pt;
+  padding-left: 14pt;
+  list-style: disc;
+}
+
+.entry li {
+  margin-bottom: 1.5pt;
+}
+
+.entry li::marker {
+  color: var(--accent);
+}
+
+/* ---------- Skills ---------- */
+
+.skills-group {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2.5pt;
+  break-inside: avoid;
+}
+
+.skills-group:last-child {
+  margin-bottom: 0;
+}
+
+.skills-label {
+  flex: 0 0 1.5in;
+  font-weight: 700;
+  font-size: 9pt;
+}
+
+.skills-list {
+  flex: 1;
+  color: var(--ink);
+}
+
+/* ---------- Education & certifications ---------- */
+
+.edu-degree {
+  font-weight: 700;
+}
+
+.edu-notes {
+  font-size: 9pt;
+  color: var(--ink-soft);
+  margin-top: 1pt;
+}
+
+.cert-list {
+  padding-left: 14pt;
+  list-style: disc;
+}
+
+.cert-list li {
+  margin-bottom: 1.5pt;
+}
+
+.cert-list li::marker {
+  color: var(--accent);
+}
+
+/* ---------- Print ---------- */
+
+@page {
+  size: letter;
+  margin: 0.6in;
+}
+
+@media print {
+  body {
+    background: none;
+    padding: 0;
+  }
+
+  /* Page margins come from @page / Puppeteer, not element padding. */
+  .resume {
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .section {
+    break-inside: auto;
+  }
+
+  a {
+    color: inherit;
+  }
+}

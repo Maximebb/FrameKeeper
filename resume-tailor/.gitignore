@@ -1,0 +1,9 @@
+# Dependencies
+node_modules/
+
+# Generated resume outputs (regenerate with `npm run render -- jobs/<slug>/tailored.json`)
+jobs/**/resume.html
+jobs/**/resume.pdf
+
+# OS noise
+.DS_Store

@@ -1,0 +1,17 @@
+{
+  "name": "resume-tailor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent skill that tailors a resume to a job posting and renders it to PDF via an HTML template",
+  "type": "module",
+  "scripts": {
+    "render": "node scripts/render.mjs",
+    "render:example": "node scripts/render.mjs jobs/example-job/tailored.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "puppeteer": "^25.3.0"
+  }
+}

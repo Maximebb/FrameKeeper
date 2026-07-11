@@ -1,0 +1,40 @@
+{
+  "title": "Senior Backend Engineer",
+  "summary": "Backend engineer with nine years of experience building event-driven data pipelines and cloud infrastructure on AWS. Led a 12-service Kubernetes migration, introduced Terraform across the platform team, and built the observability stack that cut mean time to detection from 25 to 4 minutes. Mentored six engineers and drives alignment through design documents.",
+  "experience": [
+    {
+      "company": "Northwind Cloud",
+      "title": "Senior Software Engineer",
+      "bullets": [
+        "Design and operate a multi-tenant event ingestion pipeline in Go and Kafka processing 40M events/day with p99 latency under 250ms",
+        "Led migration of 12 services from EC2 to Kubernetes (EKS), cutting infrastructure costs by 30% and deploy time from 45 to 8 minutes",
+        "Introduced Terraform across the platform team; all new infrastructure has been provisioned as code since 2022",
+        "Built the on-call observability stack (Prometheus, Grafana, PagerDuty), reducing mean time to detection from 25 to 4 minutes",
+        "Wrote the design document for and led implementation of a usage-based billing service handling $2M ARR"
+      ]
+    },
+    {
+      "company": "Fabrikam Software",
+      "title": "Software Engineer",
+      "bullets": [
+        "Built REST and GraphQL APIs in TypeScript (Node.js) for a B2B analytics product serving 300 enterprise customers",
+        "Redesigned the PostgreSQL reporting schema, speeding up the slowest dashboard queries by 12x",
+        "Mentored two junior hires and ran a biweekly tech talk series"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "label": "Backend & Streaming",
+      "skills": ["Go", "TypeScript", "Node.js", "Kafka", "PostgreSQL", "Redis", "REST API design"]
+    },
+    {
+      "label": "Cloud & Infrastructure",
+      "skills": ["AWS (ECS, EKS, Lambda, S3, RDS)", "Kubernetes", "Terraform", "Docker", "GitHub Actions"]
+    },
+    {
+      "label": "Observability & Practices",
+      "skills": ["Prometheus / Grafana", "OpenTelemetry", "Incident response & on-call", "Technical design documents", "Mentoring & onboarding"]
+    }
+  ]
+}

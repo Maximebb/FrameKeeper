@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{name}} — Resume</title>
+<style>
+{{css}}
+</style>
+</head>
+<body>
+<main class="resume">
+
+  <header class="header">
+    <h1 class="name">{{name}}</h1>
+    <p class="headline">{{title}}</p>
+    <p class="contact">{{contact}}</p>
+  </header>
+
+  <section class="section">
+    <h2 class="section-title">Summary</h2>
+    <p class="summary">{{summary}}</p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Experience</h2>
+    {{experience}}
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Skills</h2>
+    {{skills}}
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Education</h2>
+    {{education}}
+  </section>
+
+{{certifications}}
+
+</main>
+</body>
+</html>
