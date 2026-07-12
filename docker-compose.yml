@@ -1,0 +1,24 @@
+services:
+  framekeeper:
+    build: .
+    container_name: framekeeper
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      FK_DATA_DIR: /data
+      FK_BACKUP_DIR: /backups
+      # Set when behind a TLS reverse proxy:
+      # FK_SECURE_COOKIES: "true"
+      # FK_TRUST_PROXY: "true"
+      # Override the default admin password on first boot:
+      # FK_ADMIN_PASSWORD: "your-strong-password"
+    volumes:
+      # SQLite database (config, digests, sessions, users, tokens)
+      - framekeeper-data:/data
+      # Where backed-up photos/videos land; point this at your NAS storage
+      - ./backups:/backups
+
+volumes:
+  framekeeper-data:
