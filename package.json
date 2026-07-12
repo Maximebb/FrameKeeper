@@ -1,0 +1,23 @@
+{
+  "name": "framekeeper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Camera SD card backup system: containerized server + native Windows client",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @framekeeper/shared && npm run build -w @framekeeper/server && npm run build -w @framekeeper/client && npm run build -w @framekeeper/frontend",
+    "start:server": "npm run start -w @framekeeper/server",
+    "start:client": "npm run start -w @framekeeper/client",
+    "dev:frontend": "npm run dev -w @framekeeper/frontend",
+    "smoke": "node scripts/smoke-test.mjs",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.9"
+  }
+}
