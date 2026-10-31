@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api, formatBytes, type Session } from '../api';
 
+const isActive = (s: Session) => ['pending', 'confirmed', 'running'].includes(s.status);
+
 export function Dashboard() {
   const [session, setSession] = useState<Session | null>(null);
   const [recent, setRecent] = useState<Session[]>([]);
@@ -16,8 +18,7 @@ export function Dashboard() {
     source.addEventListener('session', (event) => {
       const updated = JSON.parse((event as MessageEvent).data) as Session;
       setSession((current) => {
-        const active = ['pending', 'confirmed', 'running'].includes(updated.status);
-        if (active) return updated;
+        if (isActive(updated)) return updated;
         return current?.id === updated.id ? null : current;
       });
       api.sessions().then((s) => setRecent(s.sessions.slice(0, 8))).catch(() => undefined);
@@ -34,6 +35,11 @@ export function Dashboard() {
   };
   const dismiss = async (id: number) => {
     await api.dismissSession(id);
+    refresh();
+  };
+  const cancel = async (id: number) => {
+    if (!window.confirm('Cancel this session? Files already backed up are kept.')) return;
+    await api.cancelSession(id);
     refresh();
   };
 
@@ -74,7 +80,12 @@ export function Dashboard() {
               <span>
                 Backing up <strong>{session.cardLabel}</strong> from {session.clientName}
               </span>
-              <strong>{pct}%</strong>
+              <div class="row">
+                <strong>{pct}%</strong>
+                <button class="ghost" onClick={() => cancel(session.id)}>
+                  Cancel
+                </button>
+              </div>
             </div>
             <div class="progress-track">
               <div class="progress-fill" style={`width:${pct}%`} />
@@ -106,6 +117,7 @@ export function Dashboard() {
                 <th>Size</th>
                 <th>Status</th>
                 <th>Started</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -122,6 +134,13 @@ export function Dashboard() {
                     {s.error && <span class="danger" title={s.error}> !</span>}
                   </td>
                   <td class="muted">{s.startedAt}</td>
+                  <td>
+                    {isActive(s) && (
+                      <button class="ghost" onClick={() => cancel(s.id)}>
+                        Cancel
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -152,6 +152,27 @@ describe('runBackup', () => {
     expect(cardFiles(card.root)).toHaveLength(1);
   });
 
+  it('does nothing when the user cancels the pending session', async () => {
+    const card = makeCard({ 'A.CR3': 'aaa' });
+    const { api, asServerApi } = makeApi({ announceStatus: 'pending', sessionStatuses: ['failed'] });
+
+    await runBackup(makeConfig(), asServerApi, card);
+
+    expect(api.upload).not.toHaveBeenCalled();
+    expect(api.complete).not.toHaveBeenCalled();
+  });
+
+  it('stops uploading when the session is cancelled mid-run', async () => {
+    const card = makeCard({ 'A.CR3': 'aaa', 'B.CR3': 'bbb' });
+    const { api, asServerApi } = makeApi();
+    api.reportProgress.mockRejectedValueOnce(new Error('POST /api/sessions/42/progress -> 409'));
+
+    await expect(runBackup(makeConfig(), asServerApi, card)).rejects.toThrow('409');
+
+    expect(api.upload).toHaveBeenCalledTimes(1);
+    expect(api.complete).not.toHaveBeenCalled();
+  });
+
   it('applies local and server ignore patterns', async () => {
     const card = makeCard({ 'A.CR3': 'aaa', 'A.THM': 'x', 'B.LRV': 'y' });
     const { api, asServerApi } = makeApi({ serverIgnorePatterns: ['*.LRV'] });

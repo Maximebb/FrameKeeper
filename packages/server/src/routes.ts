@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import type { AnnounceRequest, ProgressUpdate, ServerConfig } from '@framekeeper/shared';
+import type { AnnounceRequest, ProgressUpdate, ServerConfig, SessionStatus } from '@framekeeper/shared';
 import { matchesAnyPattern } from '@framekeeper/shared';
 import { Repositories } from './repositories';
 import { StorageEngine, DigestMismatchError } from './storage';
@@ -142,10 +142,24 @@ export function registerRoutes(
     return { ok: true };
   });
 
+  // Lets a user clear a session whose client went away (sleep, crash, unplugged)
+  // and never completed. A client still working on it is stopped by the 409s below.
+  app.post('/api/sessions/:id/cancel', async (request, reply) => {
+    if (!requireUser(request, reply)) return;
+    const id = Number((request.params as { id: string }).id);
+    const session = repos.getSession(id);
+    if (!session) return reply.code(404).send({ error: 'not_found' });
+    if (isFinished(session.status)) return reply.code(409).send({ error: 'not_active' });
+    repos.setSessionStatus(id, 'failed', 'Cancelled by user');
+    events.broadcast('session', repos.getSession(id));
+    return { ok: true };
+  });
+
   app.post('/api/sessions/:id/progress', async (request, reply) => {
     const id = Number((request.params as { id: string }).id);
     const session = repos.getSession(id);
     if (!session) return reply.code(404).send({ error: 'not_found' });
+    if (isFinished(session.status)) return reply.code(409).send({ error: 'not_active' });
     const body = request.body as ProgressUpdate;
     repos.updateSessionProgress(
       id,
@@ -162,6 +176,7 @@ export function registerRoutes(
     const id = Number((request.params as { id: string }).id);
     const session = repos.getSession(id);
     if (!session) return reply.code(404).send({ error: 'not_found' });
+    if (isFinished(session.status)) return reply.code(409).send({ error: 'not_active' });
     const { error } = (request.body ?? {}) as { error?: string };
     repos.setSessionStatus(id, error ? 'failed' : 'done', error);
     events.broadcast('session', repos.getSession(id));
@@ -198,4 +213,8 @@ export function registerRoutes(
       throw err;
     }
   });
+}
+
+function isFinished(status: SessionStatus): boolean {
+  return status === 'done' || status === 'failed' || status === 'dismissed';
 }

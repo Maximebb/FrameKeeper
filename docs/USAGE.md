@@ -55,6 +55,20 @@ Server-side settings (**Settings** in this frontend) include ignore patterns and
 
 Re-inserting a card after removal triggers a new detection and prompt.
 
+If a session never finishes (for example the client PC went to sleep mid-backup), click
+**Cancel** next to it on the Dashboard. It is marked failed ("Cancelled by user"); files
+already backed up are kept. A client that is still working on a cancelled session stops at its
+next progress report.
+
+### Uploading from the browser (macOS, Linux, or no client)
+
+Open the **Upload** tab, pick files or a whole folder (for example the card's `DCIM` folder),
+and click **Upload**. The browser hashes each file, skips anything the server already has, and
+uploads the rest; the server verifies each file exactly as it does for the Windows client. The
+upload appears as a session from client "Browser" on the Dashboard. Server ignore patterns
+apply. Files are never deleted from your computer or card. Keep the tab open until it finishes;
+if you close it mid-upload, cancel the leftover session from the Dashboard.
+
 ## Backup process
 
 1. **Detection** — the client polls removable drives every few seconds. A volume qualifies when

@@ -42,6 +42,7 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 | Path | Role |
 | --- | --- |
 | `packages/shared/src/index.ts` | API types (`AnnounceRequest`, `BackupSession`, `FileRecord`, `FilePublicRecord`, ...), `sha256File`, `matchesAnyPattern` |
+| `packages/shared/src/patterns.ts` | `matchesAnyPattern`, kept free of Node imports so the frontend can import it (`@shared/patterns` alias) |
 | `packages/server/src/index.ts` | Composition root: env, helmet, rate-limit, DB, auth, routes, static frontend |
 | `packages/server/src/env.ts` | Environment variables (`PORT`, `HOST`, `FK_DATA_DIR`, `FK_BACKUP_DIR`, `FK_FRONTEND_DIR`, `FK_SECURE_COOKIES`, `FK_TRUST_PROXY`, `FK_ADMIN_PASSWORD`) |
 | `packages/server/src/db.ts` | Schema creation (`node:sqlite`, WAL). No migration framework: additive `CREATE TABLE IF NOT EXISTS` |
@@ -58,6 +59,7 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 | `packages/client/src/config.ts` | `config.yaml` loading/validation |
 | `packages/client/src/service/` | `node-windows` install/uninstall scripts (plain JS, copied via `allowJs`) |
 | `packages/frontend/src/` | Preact SPA (`App.tsx`, `views/`, `api.ts`) |
+| `packages/frontend/src/upload.ts` | Browser upload workflow (manual file/folder picker, for non-Windows users) |
 | `scripts/smoke-test.mjs` | End-to-end test using a fake card directory |
 | `Dockerfile`, `docker-compose.yml` | Server container |
 | `docs/USAGE.md` | Operator guide (workflow, backup process, deployment models); bundled into the frontend Guide page at build time |
@@ -100,7 +102,7 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 - **Client machines**: bearer token `fk_<tokenId>_<secret>` created in the frontend
   (Settings -> API tokens). The server looks up by `tokenId`, verifies the secret hash, updates
   `last_used_at`. Tokens are revocable (`revoked_at`).
-- **Route classes**: management and read routes (config, tokens, session confirm/dismiss,
+- **Route classes**: management and read routes (config, tokens, session confirm/dismiss/cancel,
   file index, session history, live status, SSE) require a *user* session — bearer tokens get
   403 (`requireUser` in `routes.ts`). Client routes (announce, digests, upload, progress,
   complete, single-session poll) accept either credential.
@@ -140,7 +142,24 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
    `done` or `failed`. The client stops at the first failed file (no per-file retry yet).
 7. The frontend receives every session mutation as an SSE `session` event on `GET /api/events`.
 
+### Browser upload
+
+For machines without the Windows client, the frontend **Upload** page runs the same steps as
+`backup.ts` on files the user picks (multi-file or folder picker), authenticated by the browser
+session: announce (`clientName: "Browser"`, label = picked folder name or `Manual upload`),
+confirm immediately (picking the files is the confirmation), apply server ignore patterns, then
+per file hash -> `GET /api/digests/:sha` -> `POST /api/files` (requires `verified: true`) ->
+progress, and finally complete. Hashing uses `@noble/hashes` in 4 MiB chunks rather than
+WebCrypto, which needs a secure context (breaks plain-HTTP LAN deployments) and has no
+incremental API. Nothing is triggered automatically and nothing is deleted on the user's side.
+
 Session states: `pending -> confirmed -> running -> done | failed`, or `pending -> dismissed`.
+
+A user can cancel any non-finished session (`POST /api/sessions/:id/cancel`, user session only),
+which sets it to `failed` with error `Cancelled by user`. This clears sessions whose client
+disappeared. Once a session is finished (`done`, `failed`, `dismissed`), `progress` and
+`complete` return 409 `not_active`, so a client still running a cancelled session aborts at its
+next progress report and cannot flip it back to `done`.
 
 ## Configuration
 

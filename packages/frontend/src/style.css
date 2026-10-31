@@ -186,3 +186,7 @@ td.mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-
 .guide-content th, .guide-content td { text-align: left; padding: 0.55rem 0.65rem; border: 1px solid #2a3140; vertical-align: top; }
 .guide-content th { background: var(--panel-2); color: var(--muted); font-weight: 600; }
 .guide-content hr { border: none; border-top: 1px solid #2a3140; margin: 1.5rem 0; }
+
+label.file-pick { display: inline-block; padding: 0.5rem 1.1rem; font-size: 0.95rem; border: 1px solid #2a3140; border-radius: var(--radius); cursor: pointer; }
+label.file-pick:hover { border-color: var(--muted); }
+label.file-pick.disabled { opacity: 0.5; cursor: default; }

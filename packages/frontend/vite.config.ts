@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@docs': path.join(repoRoot, 'docs'),
+      '@shared': path.join(repoRoot, 'packages/shared/src'),
     },
   },
   server: {

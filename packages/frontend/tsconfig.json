@@ -11,7 +11,8 @@
     "noEmit": true,
     "types": ["vite/client"],
     "paths": {
-      "@docs/*": ["../../docs/*"]
+      "@docs/*": ["../../docs/*"],
+      "@shared/*": ["../shared/src/*"]
     }
   },
   "include": ["src"]

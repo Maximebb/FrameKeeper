@@ -35,6 +35,13 @@ export interface TokenInfo {
   revoked_at: string | null;
 }
 
+export interface UploadProgress {
+  doneBytes: number;
+  filesDone: number;
+  filesSkipped: number;
+  currentFile: string | null;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -50,6 +57,10 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+  return parse<T>(res);
+}
+
+async function parse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let code = 'request_failed';
     try {
@@ -83,6 +94,7 @@ export const api = {
 
   confirmSession: (id: number) => request<{ ok: true }>('POST', `/api/sessions/${id}/confirm`),
   dismissSession: (id: number) => request<{ ok: true }>('POST', `/api/sessions/${id}/dismiss`),
+  cancelSession: (id: number) => request<{ ok: true }>('POST', `/api/sessions/${id}/cancel`),
 
   getConfig: () => request<ServerConfig>('GET', '/api/config'),
   putConfig: (config: ServerConfig) => request<ServerConfig>('PUT', '/api/config', config),
@@ -91,6 +103,39 @@ export const api = {
   createToken: (name: string) =>
     request<{ token: string; tokenId: string; name: string }>('POST', '/api/tokens', { name }),
   revokeToken: (tokenId: string) => request<{ ok: true }>('DELETE', `/api/tokens/${tokenId}`),
+
+  // Same client endpoints the native client uses, authenticated by the browser session.
+  announce: (body: {
+    clientName: string;
+    cardLabel: string;
+    files: { name: string; size: number; mtimeMs?: number }[];
+  }) =>
+    request<{ sessionId: number; status: string; ignorePatterns: string[] }>(
+      'POST',
+      '/api/cards/announce',
+      body
+    ),
+  digestExists: (sha256: string) => request<{ exists: boolean }>('GET', `/api/digests/${sha256}`),
+  reportProgress: (id: number, progress: UploadProgress) =>
+    request<{ ok: true }>('POST', `/api/sessions/${id}/progress`, progress),
+  completeSession: (id: number, error?: string) =>
+    request<{ ok: true }>('POST', `/api/sessions/${id}/complete`, error ? { error } : {}),
+  /** Resolves only once the server has written and re-verified the file's digest. */
+  uploadFile: async (sessionId: number, file: Blob, name: string, sha256: string, mtimeMs: number) => {
+    const res = await fetch('/api/files', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-FK-Sha256': sha256,
+        'X-FK-Name': encodeURIComponent(name),
+        'X-FK-Mtime': String(Math.round(mtimeMs)),
+        'X-FK-Session': String(sessionId),
+      },
+      body: file,
+    });
+    const body = await parse<{ verified?: boolean }>(res);
+    if (!body.verified) throw new ApiError(res.status, 'not_verified');
+  },
 };
 
 export function formatBytes(bytes: number): string {
