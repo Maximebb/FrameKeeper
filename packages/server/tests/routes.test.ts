@@ -164,6 +164,67 @@ describe('progress and completion', () => {
   });
 });
 
+describe('cancel', () => {
+  const announce = async () =>
+    (
+      await t.app.inject({
+        method: 'POST',
+        url: '/api/cards/announce',
+        headers: bearer,
+        payload: { clientName: 'pc', cardLabel: 'card', files: [{ name: 'A.CR3', size: 10 }] },
+      })
+    ).json().sessionId as number;
+  const cancel = (id: number, headers: Record<string, string>) =>
+    t.app.inject({ method: 'POST', url: `/api/sessions/${id}/cancel`, headers });
+
+  it('marks a stalled running session as failed and clears the active status', async () => {
+    const id = await announce();
+    await t.app.inject({
+      method: 'POST',
+      url: `/api/sessions/${id}/progress`,
+      headers: bearer,
+      payload: { doneBytes: 5, filesDone: 0, filesSkipped: 0, currentFile: 'A.CR3' },
+    });
+
+    expect((await cancel(id, { cookie })).statusCode).toBe(200);
+    const session = (await t.app.inject({ method: 'GET', url: `/api/sessions/${id}`, headers: bearer })).json();
+    expect(session).toMatchObject({ status: 'failed', error: 'Cancelled by user' });
+    expect(session.finishedAt).not.toBeNull();
+    const status = (await t.app.inject({ method: 'GET', url: '/api/status', headers: { cookie } })).json();
+    expect(status.session).toBeNull();
+  });
+
+  it('rejects later progress and completion from the client', async () => {
+    const id = await announce();
+    await cancel(id, { cookie });
+
+    const progress = await t.app.inject({
+      method: 'POST',
+      url: `/api/sessions/${id}/progress`,
+      headers: bearer,
+      payload: { doneBytes: 10, filesDone: 1, filesSkipped: 0, currentFile: 'A.CR3' },
+    });
+    expect(progress.statusCode).toBe(409);
+    const complete = await t.app.inject({
+      method: 'POST',
+      url: `/api/sessions/${id}/complete`,
+      headers: bearer,
+      payload: {},
+    });
+    expect(complete.statusCode).toBe(409);
+    const session = (await t.app.inject({ method: 'GET', url: `/api/sessions/${id}`, headers: bearer })).json();
+    expect(session.status).toBe('failed');
+  });
+
+  it('rejects finished sessions, unknown ids and bearer tokens', async () => {
+    const id = await announce();
+    expect((await cancel(id, bearer)).statusCode).toBe(403);
+    await cancel(id, { cookie });
+    expect((await cancel(id, { cookie })).statusCode).toBe(409);
+    expect((await cancel(9999, { cookie })).statusCode).toBe(404);
+  });
+});
+
 describe('digest check and upload', () => {
   it('validates digest format', async () => {
     const res = await t.app.inject({ method: 'GET', url: '/api/digests/nothex', headers: bearer });

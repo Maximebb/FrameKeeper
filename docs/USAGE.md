@@ -55,6 +55,11 @@ Server-side settings (**Settings** in this frontend) include ignore patterns and
 
 Re-inserting a card after removal triggers a new detection and prompt.
 
+If a session never finishes (for example the client PC went to sleep mid-backup), click
+**Cancel** next to it on the Dashboard. It is marked failed ("Cancelled by user"); files
+already backed up are kept. A client that is still working on a cancelled session stops at its
+next progress report.
+
 ## Backup process
 
 1. **Detection** — the client polls removable drives every few seconds. A volume qualifies when

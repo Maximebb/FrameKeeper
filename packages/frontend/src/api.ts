@@ -83,6 +83,7 @@ export const api = {
 
   confirmSession: (id: number) => request<{ ok: true }>('POST', `/api/sessions/${id}/confirm`),
   dismissSession: (id: number) => request<{ ok: true }>('POST', `/api/sessions/${id}/dismiss`),
+  cancelSession: (id: number) => request<{ ok: true }>('POST', `/api/sessions/${id}/cancel`),
 
   getConfig: () => request<ServerConfig>('GET', '/api/config'),
   putConfig: (config: ServerConfig) => request<ServerConfig>('PUT', '/api/config', config),

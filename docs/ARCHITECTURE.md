@@ -100,7 +100,7 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 - **Client machines**: bearer token `fk_<tokenId>_<secret>` created in the frontend
   (Settings -> API tokens). The server looks up by `tokenId`, verifies the secret hash, updates
   `last_used_at`. Tokens are revocable (`revoked_at`).
-- **Route classes**: management and read routes (config, tokens, session confirm/dismiss,
+- **Route classes**: management and read routes (config, tokens, session confirm/dismiss/cancel,
   file index, session history, live status, SSE) require a *user* session — bearer tokens get
   403 (`requireUser` in `routes.ts`). Client routes (announce, digests, upload, progress,
   complete, single-session poll) accept either credential.
@@ -141,6 +141,12 @@ npm workspaces monorepo. TypeScript everywhere, CommonJS output for Node package
 7. The frontend receives every session mutation as an SSE `session` event on `GET /api/events`.
 
 Session states: `pending -> confirmed -> running -> done | failed`, or `pending -> dismissed`.
+
+A user can cancel any non-finished session (`POST /api/sessions/:id/cancel`, user session only),
+which sets it to `failed` with error `Cancelled by user`. This clears sessions whose client
+disappeared. Once a session is finished (`done`, `failed`, `dismissed`), `progress` and
+`complete` return 409 `not_active`, so a client still running a cancelled session aborts at its
+next progress report and cannot flip it back to `done`.
 
 ## Configuration
 

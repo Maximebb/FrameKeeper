@@ -89,7 +89,8 @@ async function waitForConfirmation(api: ServerApi, sessionId: number): Promise<b
   while (Date.now() < deadline) {
     const session = await api.getSession(sessionId);
     if (session.status === 'confirmed' || session.status === 'running') return true;
-    if (session.status === 'dismissed') return false;
+    // 'failed' here means a user cancelled the session before it started.
+    if (session.status === 'dismissed' || session.status === 'failed') return false;
     await new Promise((r) => setTimeout(r, CONFIRMATION_POLL_MS));
   }
   return false;
