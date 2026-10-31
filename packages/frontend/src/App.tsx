@@ -6,6 +6,7 @@ import { Dashboard } from './views/Dashboard';
 import { History } from './views/History';
 import { Settings } from './views/Settings';
 import { Guide } from './views/Guide';
+import { Upload } from './views/Upload';
 
 type AuthState =
   | { phase: 'loading' }
@@ -13,7 +14,7 @@ type AuthState =
   | { phase: 'must-change'; username: string }
   | { phase: 'ready'; username: string };
 
-type Tab = 'dashboard' | 'history' | 'settings' | 'guide';
+type Tab = 'dashboard' | 'upload' | 'history' | 'settings' | 'guide';
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>({ phase: 'loading' });
@@ -70,6 +71,9 @@ export function App() {
           <button class={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
             Dashboard
           </button>
+          <button class={tab === 'upload' ? 'active' : ''} onClick={() => setTab('upload')}>
+            Upload
+          </button>
           <button class={tab === 'history' ? 'active' : ''} onClick={() => setTab('history')}>
             History
           </button>
@@ -89,6 +93,7 @@ export function App() {
       </header>
       <main>
         {tab === 'dashboard' && <Dashboard />}
+        {tab === 'upload' && <Upload />}
         {tab === 'history' && <History />}
         {tab === 'settings' && <Settings />}
         {tab === 'guide' && <Guide />}

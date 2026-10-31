@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@noble/hashes": "^1.8.0",
     "marked": "^15.0.0",
     "preact": "^10.24.0"
   },
