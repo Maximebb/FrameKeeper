@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@noble/hashes": "^1.8.0",
-    "marked": "^15.0.0",
+    "marked": "^18.1.2",
     "preact": "^10.24.0"
   },
   "devDependencies": {
